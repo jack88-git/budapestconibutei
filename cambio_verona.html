@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El decollo dei fiorini - Hellas Style</title>
+    <style>
+        :root {
+            --hellas-yellow: #F9D611;
+            --hellas-blue: #003366;
+            --white: #ffffff;
+            --bg-color: #f0f2f5;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--hellas-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .converter-card {
+            background: var(--white);
+            border: 4px solid var(--hellas-blue);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 380px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: var(--hellas-blue);
+            color: var(--hellas-yellow);
+            padding: 20px;
+            text-align: center;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .header p {
+            margin: 5px 0 0 0;
+            font-size: 0.85rem;
+            color: var(--white);
+        }
+
+        .content {
+            padding: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--hellas-blue);
+        }
+
+        .field-container {
+            display: flex;
+            align-items: center;
+            border: 2px solid var(--hellas-blue);
+            border-radius: 8px;
+            padding: 10px 14px;
+            background: var(--white);
+        }
+
+        .field-container:focus-within {
+            border-color: var(--hellas-yellow);
+            background-color: #fffef0;
+        }
+
+        input[type="number"] {
+            border: none;
+            outline: none;
+            font-size: 1.25rem;
+            width: 100%;
+            color: var(--hellas-blue);
+            font-weight: bold;
+            background: transparent;
+        }
+
+        .currency-label {
+            font-weight: 800;
+            color: var(--hellas-yellow);
+            background-color: var(--hellas-blue);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+            min-width: 38px;
+            text-align: center;
+        }
+
+        .rate-info {
+            font-size: 0.85rem;
+            color: #555;
+            text-align: center;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .warning-box {
+            background-color: var(--hellas-yellow);
+            color: var(--hellas-blue);
+            border: 2px solid var(--hellas-blue);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="converter-card">
+    <div class="header">
+        <h2>Gialloblù Cambi</h2>
+        <p>Par non farse incular quando te si pien!</p>
+    </div>
+    
+    <div class="content">
+        <div class="input-group">
+            <label for="huf-input">Fiorini ungheresi (HUF)</label>
+            <div class="field-container">
+                <input type="number" id="huf-input" placeholder="0" min="0" oninput="convertHufToEur()">
+                <span class="currency-label">HUF</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="eur-input">Euri (EUR)</label>
+            <div class="field-container">
+                <input type="number" id="eur-input" placeholder="0" min="0" oninput="convertEurToHuf()">
+                <span class="currency-label">EUR</span>
+            </div>
+        </div>
+
+        <div id="rate-info" class="rate-info">
+            Tasso drio cargarse...
+        </div>
+
+        <div class="warning-box">
+            OCIO! Quando te paghi co' la carta de credito, seleziona sempre HUF! Se te selezioni EUR i te incula col cambio!
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tasso di base iniziale di sicurezza
+    let exchangeRate = 364; 
+
+    const hufInput = document.getElementById('huf-input');
+    const eurInput = document.getElementById('eur-input');
+    const rateInfo = document.getElementById('rate-info');
+
+    // Recupera il tasso in tempo reale dall'API di Frankfurter
+    async function fetchLiveRate() {
+        try {
+            const response = await fetch('https://api.frankfurter.dev/v1/latest?from=EUR&to=HUF');
+            if (response.ok) {
+                const data = await response.json();
+                exchangeRate = data.rates.HUF;
+                rateInfo.innerHTML = `Tasso aggiornà in direta: 1 EUR = ${exchangeRate.toFixed(2)} HUF`;
+            } else {
+                rateInfo.innerHTML = `Usa el tasso fisso: 1 EUR = ${exchangeRate} HUF`;
+            }
+        } catch (error) {
+            rateInfo.innerHTML = `Internet el va a raste: 1 EUR = ${exchangeRate} HUF`;
+        }
+    }
+
+    function convertHufToEur() {
+        const hufValue = parseFloat(hufInput.value);
+        if (isNaN(hufValue) || hufValue < 0) {
+            eurInput.value = '';
+            return;
+        }
+        eurInput.value = (hufValue / exchangeRate).toFixed(2);
+    }
+
+    function convertEurToHuf() {
+        const eurValue = parseFloat(eurInput.value);
+        if (isNaN(eurValue) || eurValue < 0) {
+            hufInput.value = '';
+            return;
+        }
+        hufInput.value = Math.round(eurValue * exchangeRate);
+    }
+
+    // Avvia il recupero del tasso al caricamento della pagina
+    fetchLiveRate();
+</script>
+
+</body>
+</html>
